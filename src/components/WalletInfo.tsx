@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { useWeb3 } from '../hooks/useWeb3';
-import { NETWORKS } from '../config/web3';
+import { NETWORKS, SupportedChainId } from '../config/web3';
 
 const WalletContainer = styled.div`
   position: fixed;
@@ -68,8 +68,13 @@ const WalletInfoComponent: React.FC = () => {
   };
 
   const getNetworkName = () => {
-    if (!chainId || !NETWORKS[chainId]) return 'Unknown Network';
-    return NETWORKS[chainId].name;
+    if (!chainId || !(chainId in NETWORKS)) return 'Unknown Network';
+    return NETWORKS[chainId as SupportedChainId].name;
+  };
+
+  const getNetworkCurrency = () => {
+    if (!chainId || !(chainId in NETWORKS)) return '';
+    return NETWORKS[chainId as SupportedChainId].currency;
   };
 
   return (
@@ -89,7 +94,7 @@ const WalletInfoComponent: React.FC = () => {
           </div>
           <Address>{formatAddress(account)}</Address>
           <Balance>
-            {parseFloat(balance).toFixed(4)} {chainId && NETWORKS[chainId]?.currency}
+            {parseFloat(balance).toFixed(4)} {getNetworkCurrency()}
           </Balance>
         </WalletInfo>
       )}

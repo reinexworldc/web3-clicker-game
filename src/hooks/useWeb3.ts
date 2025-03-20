@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useWeb3React } from '@web3-react/core';
-import { ethers } from 'ethers';
+import { Web3Provider } from '@ethersproject/providers';
 import { injectedConnector } from '../config/web3';
 
 export const useWeb3 = () => {
-  const { activate, active, account, library, deactivate, chainId } = useWeb3React<ethers.providers.Web3Provider>();
+  const context = useWeb3React<Web3Provider>();
+  const { connector, account, chainId, provider } = context;
   const [error, setError] = useState<string | null>(null);
   const [balance, setBalance] = useState<string>('0');
 
   // Connect wallet
   const connect = async () => {
     try {
-      await activate(injectedConnector);
+      await connector?.activate(injectedConnector);
       setError(null);
     } catch (err) {
       setError('Failed to connect wallet. Please make sure MetaMask is installed and unlocked.');
@@ -22,7 +23,7 @@ export const useWeb3 = () => {
   // Disconnect wallet
   const disconnect = async () => {
     try {
-      deactivate();
+      await connector?.deactivate();
       setError(null);
     } catch (err) {
       console.error('Disconnection error:', err);
@@ -31,10 +32,10 @@ export const useWeb3 = () => {
 
   // Get account balance
   const getBalance = async () => {
-    if (library && account) {
+    if (provider && account) {
       try {
-        const balance = await library.getBalance(account);
-        setBalance(ethers.utils.formatEther(balance));
+        const balance = await provider.getBalance(account);
+        setBalance(balance.toString());
       } catch (err) {
         console.error('Balance fetch error:', err);
       }
@@ -43,17 +44,17 @@ export const useWeb3 = () => {
 
   // Update balance when account or chain changes
   useEffect(() => {
-    if (active && account) {
+    if (context.active && account) {
       getBalance();
     }
-  }, [active, account, chainId]);
+  }, [context.active, account, chainId]);
 
   // Handle account changes
   useEffect(() => {
     if (window.ethereum) {
       window.ethereum.on('accountsChanged', (accounts: string[]) => {
         if (accounts.length === 0) {
-          deactivate();
+          disconnect();
         }
       });
 
@@ -66,7 +67,7 @@ export const useWeb3 = () => {
   return {
     connect,
     disconnect,
-    active,
+    active: context.active,
     account,
     balance,
     error,

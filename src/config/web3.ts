@@ -1,20 +1,24 @@
 import { InjectedConnector } from '@web3-react/injected-connector';
 
+// Network types
+interface NetworkConfig {
+  name: string;
+  currency: string;
+  explorerUrl: string;
+}
+
 // Supported chain IDs
 export const supportedChainIds = [
   1, // Ethereum Mainnet
   5, // Goerli Testnet
   137, // Polygon Mainnet
   80001, // Mumbai Testnet
-];
+] as const;
 
-// Connector instance
-export const injectedConnector = new InjectedConnector({
-  supportedChainIds,
-});
+export type SupportedChainId = typeof supportedChainIds[number];
 
 // Network configurations
-export const NETWORKS = {
+export const NETWORKS: Record<SupportedChainId, NetworkConfig> = {
   1: {
     name: 'Ethereum Mainnet',
     currency: 'ETH',
@@ -35,4 +39,9 @@ export const NETWORKS = {
     currency: 'MATIC',
     explorerUrl: 'https://mumbai.polygonscan.com',
   },
-}; 
+};
+
+// Connector instance
+export const injectedConnector = new InjectedConnector({
+  supportedChainIds: supportedChainIds as number[],
+}); 

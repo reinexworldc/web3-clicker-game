@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Web3ReactProvider } from '@web3-react/core';
-import { ethers } from 'ethers';
+import { Web3Provider } from '@ethersproject/providers';
 import styled from 'styled-components';
 import Upgrade from './components/Upgrade';
 import CollectibleItem from './components/CollectibleItem';
@@ -9,11 +9,11 @@ import { COLLECTIBLE_ITEMS } from './data/collectibles';
 import { SET_BONUSES, CollectibleItem as CollectibleItemType, SetType } from './types/items';
 
 // Function to get Web3 library
-const getLibrary = (provider: any) => {
-  const library = new ethers.providers.Web3Provider(provider);
+function getLibrary(provider: any): Web3Provider {
+  const library = new Web3Provider(provider);
   library.pollingInterval = 12000;
   return library;
-};
+}
 
 // Game container styles
 const GameContainer = styled.div`
