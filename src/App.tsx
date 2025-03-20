@@ -1,9 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { Web3ReactProvider } from '@web3-react/core';
+import { ethers } from 'ethers';
 import styled from 'styled-components';
 import Upgrade from './components/Upgrade';
 import CollectibleItem from './components/CollectibleItem';
+import WalletInfoComponent from './components/WalletInfo';
 import { COLLECTIBLE_ITEMS } from './data/collectibles';
 import { SET_BONUSES, CollectibleItem as CollectibleItemType, SetType } from './types/items';
+
+// Function to get Web3 library
+const getLibrary = (provider: any) => {
+  const library = new ethers.providers.Web3Provider(provider);
+  library.pollingInterval = 12000;
+  return library;
+};
 
 // Game container styles
 const GameContainer = styled.div`
@@ -224,72 +234,75 @@ const App: React.FC = () => {
   }, [tokensPerSecond]);
 
   return (
-    <GameContainer>
-      <GameArea>
-        <Score>Tokens: {Math.floor(score)}</Score>
-        <PerSecond>Per second: {tokensPerSecond}</PerSecond>
-        <Button onClick={() => setScore(prev => prev + clickPower)}>
-          Click Me! (+{clickPower})
-        </Button>
-      </GameArea>
-      <SidePanel>
-        <TabContainer>
-          <Tab
-            active={activeTab === 'upgrades'}
-            onClick={() => setActiveTab('upgrades')}
-          >
-            Upgrades
-          </Tab>
-          <Tab
-            active={activeTab === 'collectibles'}
-            onClick={() => setActiveTab('collectibles')}
-          >
-            Collectibles
-          </Tab>
-        </TabContainer>
+    <Web3ReactProvider getLibrary={getLibrary}>
+      <GameContainer>
+        <WalletInfoComponent />
+        <GameArea>
+          <Score>Tokens: {Math.floor(score)}</Score>
+          <PerSecond>Per second: {tokensPerSecond}</PerSecond>
+          <Button onClick={() => setScore(prev => prev + clickPower)}>
+            Click Me! (+{clickPower})
+          </Button>
+        </GameArea>
+        <SidePanel>
+          <TabContainer>
+            <Tab
+              active={activeTab === 'upgrades'}
+              onClick={() => setActiveTab('upgrades')}
+            >
+              Upgrades
+            </Tab>
+            <Tab
+              active={activeTab === 'collectibles'}
+              onClick={() => setActiveTab('collectibles')}
+            >
+              Collectibles
+            </Tab>
+          </TabContainer>
 
-        {activeTab === 'upgrades' ? (
-          upgrades.map(upgrade => (
-            <Upgrade
-              key={upgrade.id}
-              name={upgrade.name}
-              description={upgrade.description}
-              cost={calculateCost(upgrade.baseCost, upgrade.multiplier, upgrade.level)}
-              level={upgrade.level}
-              canAfford={score >= calculateCost(upgrade.baseCost, upgrade.multiplier, upgrade.level)}
-              onPurchase={() => handleUpgrade(upgrade.id)}
-            />
-          ))
-        ) : (
-          <>
-            {Object.entries(SET_BONUSES).map(([setType, bonus]) => {
-              const progress = calculateSetProgress(setType as SetType);
-              if (progress.completed > 0) {
-                return (
-                  <SetBonusInfo key={setType}>
-                    <h4>{bonus.name}</h4>
-                    <p>{bonus.description}</p>
-                    <SetProgress>
-                      Progress: {progress.completed}/{progress.required}
-                      {progress.isComplete && ' (Complete!)'}
-                    </SetProgress>
-                  </SetBonusInfo>
-                );
-              }
-              return null;
-            })}
-            {collectibles.map(item => (
-              <CollectibleItem
-                key={item.id}
-                item={item}
-                canAfford={score >= item.cost}
-                onPurchase={() => handleCollectiblePurchase(item.id)}
+          {activeTab === 'upgrades' ? (
+            upgrades.map(upgrade => (
+              <Upgrade
+                key={upgrade.id}
+                name={upgrade.name}
+                description={upgrade.description}
+                cost={calculateCost(upgrade.baseCost, upgrade.multiplier, upgrade.level)}
+                level={upgrade.level}
+                canAfford={score >= calculateCost(upgrade.baseCost, upgrade.multiplier, upgrade.level)}
+                onPurchase={() => handleUpgrade(upgrade.id)}
               />
-            ))}
-          </>
-        )}
-      </SidePanel>
-    </GameContainer>
+            ))
+          ) : (
+            <>
+              {Object.entries(SET_BONUSES).map(([setType, bonus]) => {
+                const progress = calculateSetProgress(setType as SetType);
+                if (progress.completed > 0) {
+                  return (
+                    <SetBonusInfo key={setType}>
+                      <h4>{bonus.name}</h4>
+                      <p>{bonus.description}</p>
+                      <SetProgress>
+                        Progress: {progress.completed}/{progress.required}
+                        {progress.isComplete && ' (Complete!)'}
+                      </SetProgress>
+                    </SetBonusInfo>
+                  );
+                }
+                return null;
+              })}
+              {collectibles.map(item => (
+                <CollectibleItem
+                  key={item.id}
+                  item={item}
+                  canAfford={score >= item.cost}
+                  onPurchase={() => handleCollectiblePurchase(item.id)}
+                />
+              ))}
+            </>
+          )}
+        </SidePanel>
+      </GameContainer>
+    </Web3ReactProvider>
   );
 };
 
